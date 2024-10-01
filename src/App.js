@@ -6,7 +6,9 @@ const App = () => {
   const [tableData, setTableData] = useState([]);
   const [currentCityIndex, setCurrentCityIndex] = useState(0);
   const [highlightedCityIndex, setHighlightedCityIndex] = useState(null);
-  const [searchHighlightedRow, setSearchHighlightedRow] = useState(null); // To store the index of the row to highlight
+  const [searchHighlightedRow, setSearchHighlightedRow] = useState(null);
+  const [citySuggestions, setCitySuggestions] = useState([]); // Suggestions state
+
   const cities = ["Las Vegas", "London", "Los Angeles", "New York"];
 
   // Function to calculate the difference in hours between current time and data_and_time
@@ -23,7 +25,9 @@ const App = () => {
       const response = await fetch(
         `https://python3-dot-parul-arena-2.appspot.com/test?cityname=${city}`
       );
+      console.log(response);
       const data = await response.json();
+      console.log(data);
       return {
         city,
         description: data.description,
@@ -54,25 +58,45 @@ const App = () => {
   // Function to handle search and fetch the data if the city is not present
   const handleSearch = async () => {
     if (cityName) {
-      // Check if the city is already present in the table
-      const existingRowIndex = tableData.findIndex(
-        (row) => row.city.toLowerCase() === cityName.toLowerCase()
+      // Normalize the user input (trim spaces and convert to lowercase)
+      const normalizedCityName = cityName.trim().toLowerCase();
+
+      // Clear city suggestions when search is initiated
+      setCitySuggestions([]);
+
+      // Find if the city matches any from the cities list
+      const matchedCity = cities.find(
+        (city) => city.toLowerCase() === normalizedCityName
       );
 
-      if (existingRowIndex !== -1) {
-        // If the city exists, highlight it in yellow for 3 seconds
-        setSearchHighlightedRow(existingRowIndex);
-        setTimeout(() => setSearchHighlightedRow(null), 3000);
-      } else {
-        // Fetch weather data for the city entered in the search input
-        const weatherData = await fetchWeatherData(cityName);
+      if (matchedCity) {
+        // Check if the city is already present in the table
+        const existingRowIndex = tableData.findIndex(
+          (row) => row.city.toLowerCase() === matchedCity.toLowerCase()
+        );
 
-        if (weatherData) {
-          setTableData((prevData) => [...prevData, weatherData]);
+        if (existingRowIndex !== -1) {
+          // Highlight the existing city row if found
+          setSearchHighlightedRow(existingRowIndex);
+          setTimeout(() => setSearchHighlightedRow(null), 3000);
         } else {
-          alert("Unable to fetch weather data. Please check the city name.");
+          // Fetch weather data for the matched city
+          const weatherData = await fetchWeatherData(matchedCity);
+
+          if (weatherData) {
+            setTableData((prevData) => [...prevData, weatherData]);
+          } else {
+            alert("Unable to fetch weather data. Please try again later.");
+          }
         }
+      } else {
+        // Display a message if the city name is not found or incorrect
+        alert(
+          "City not found. Please check the spelling or select a city from the list."
+        );
       }
+    } else {
+      alert("Please enter a city name.");
     }
   };
 
@@ -86,6 +110,22 @@ const App = () => {
     const newData = [...tableData];
     newData[index].description = newDescription;
     setTableData(newData);
+  };
+
+  const handleCityNameChange = (e) => {
+    const inputValue = e.target.value.trim();
+    setCityName(inputValue);
+
+    if (inputValue) {
+      const suggestions = cities.filter((city) =>
+        city.toLowerCase().startsWith(inputValue.toLowerCase())
+      );
+
+      // Optionally, display suggestions in a dropdown or hint area
+      setCitySuggestions(suggestions);
+    } else {
+      setCitySuggestions([]); // Clear suggestions if input is empty
+    }
   };
 
   return (
@@ -115,16 +155,30 @@ const App = () => {
 
         {/* Main content with Search bar and weather table */}
         <div className="main-content">
-          <div className="search-bar">
-            <input
-              type="text"
-              placeholder="City Name"
-              value={cityName}
-              onChange={(e) => setCityName(e.target.value)}
-            />
-            <button className="search-btn" onClick={handleSearch}>
-              Search
-            </button>
+          <div className="search-bar-content">
+            <div className="search-bar">
+              <input
+                type="text"
+                placeholder="City Name"
+                value={cityName}
+                onChange={handleCityNameChange}
+              />
+              <button className="search-btn" onClick={handleSearch}>
+                Search
+              </button>
+            </div>
+            {/* Show city suggestions */}
+            <div className="suggestion">
+              {citySuggestions.length > 0 && (
+                <ul className="suggestions-list">
+                  {citySuggestions.map((suggestion, index) => (
+                    <li key={index} onClick={() => setCityName(suggestion)}>
+                      {suggestion}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
           <table className="weather-table">
