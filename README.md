@@ -63,3 +63,12 @@ Contributions, issues, and feature requests are welcome! Feel free to check out 
 Developed by Suvansh sharma.
 
 🌟 Enjoy using the Weather App! If you find it useful, don't forget to give it a ⭐ on GitHub.
+Learning from the Project:
+
+Implemented real-time data fetching using an API.
+Enhanced user experience with suggestions and editable fields.
+Future Improvements:
+
+Add more detailed weather forecasts (e.g., hourly and weekly).
+Integrate additional weather metrics (e.g., humidity, wind speed).
+Optimize the app's performance for larger datasets.
